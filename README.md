@@ -31,7 +31,13 @@ sleigh_config::processor_x86::PSPEC_X86_16;
 sleigh_config::processor_x86::PSPEC_X86_16_REAL;
 sleigh_config::processor_x86::PSPEC_X86_64;
 sleigh_config::processor_x86::PSPEC_X86_64_COMPAT32;
+sleigh_config::processor_x86::CSPEC_X86_64_GCC;
+sleigh_config::processor_x86::CSPEC_X86_WIN;
 ```
+
+Compiler specifications are exposed the same way as processor specifications.
+They state the stack pointer and the storage each calling convention passes
+parameters in, which a consumer otherwise has to infer from register spellings.
 
 ## Processors
 

@@ -12,6 +12,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let processors_root = "ghidra/Ghidra/Processors";
     let mut sla_data = Vec::new();
     let mut pspec_data = Vec::new();
+    let mut cspec_data = Vec::new();
 
     for processor_dir in std::fs::read_dir(Path::new(processors_root))?.filter_map(Result::ok) {
         let processor_name = processor_dir.file_name().to_str().unwrap().to_owned();
@@ -68,6 +69,23 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                         pspec_data.push(format!("{mod_name}::{var_name}"));
                     }
+                    Some(ext) if ext == "cspec" => {
+                        // File extension is cspec. The compiler specification
+                        // states the stack pointer and the parameter storage a
+                        // convention uses, which a consumer otherwise has to
+                        // guess at from register spellings.
+                        let var_name = format!("CSPEC_{var_name}");
+                        let output_path = Path::new(&out_dir).join(lang_entry.file_name());
+                        std::fs::copy(lang_entry.path(), &output_path)?;
+
+                        writeln!(
+                            &mut config_vars_file,
+                            r##"pub const {var_name}: &'static str = include_str!(r#"{path}"#);"##,
+                            path = output_path.display()
+                        )?;
+
+                        cspec_data.push(format!("{mod_name}::{var_name}"));
+                    }
 
                     // No match, nothing to do
                     _ => (),
@@ -93,6 +111,16 @@ fn main() -> Result<(), Box<dyn Error>> {
         len = pspec_data.len()
     )?;
     for entry in &pspec_data {
+        writeln!(&mut config_vars_file, r##"(r#"{entry}"#, &{entry}),"##)?;
+    }
+    writeln!(&mut config_vars_file, r##"];"##)?;
+
+    writeln!(
+        &mut config_vars_file,
+        r##"pub const CSPEC_DATA: [(&'static str, &'static str); {len}] = ["##,
+        len = cspec_data.len()
+    )?;
+    for entry in &cspec_data {
         writeln!(&mut config_vars_file, r##"(r#"{entry}"#, &{entry}),"##)?;
     }
     writeln!(&mut config_vars_file, r##"];"##)?;
