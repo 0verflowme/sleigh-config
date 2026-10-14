@@ -32,3 +32,15 @@ fn run_x86_64_libsla() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(instruction.body, "RBP");
     Ok(())
 }
+
+#[test]
+fn a_processor_lists_its_files_by_name() {
+    let names: Vec<&str> = processor_x86::FILES.iter().map(|(name, _)| *name).collect();
+    assert!(names.contains(&"x86.ldefs"), "{names:?}");
+    assert!(names.contains(&"x86-64-gcc.cspec"), "{names:?}");
+    assert!(names.contains(&"x86.dwarf"), "{names:?}");
+    let ldefs = processor_x86::FILES.iter().find(|(name, _)| *name == "x86.ldefs").unwrap().1;
+    assert!(ldefs.contains("<language_definitions>"));
+    let slas: Vec<&str> = processor_x86::SLAS.iter().map(|(name, _)| *name).collect();
+    assert!(slas.contains(&"x86-64.sla"), "{slas:?}");
+}
